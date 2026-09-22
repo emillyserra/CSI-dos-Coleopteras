@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSI dos Coleópteros</title>
+<style>
+:root{--bg:#f4efe5;--card:#fffdf8;--ink:#29251f;--accent:#5d3b24;--gold:#c79a45;--ok:#2f7d4a;--bad:#b33a3a}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#eee3d0,#f9f6ef);color:var(--ink)}
+.app{max-width:850px;margin:auto;padding:24px}
+header{text-align:center;padding:22px 10px}
+h1{margin:0 0 8px;font-size:clamp(28px,5vw,44px);color:var(--accent)}
+.subtitle{font-size:17px}
+.badge{display:inline-block;background:var(--gold);color:white;padding:6px 12px;border-radius:999px;font-weight:bold;margin-top:8px}
+.card{background:var(--card);border-radius:22px;padding:28px;box-shadow:0 10px 30px #00000012}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px;font-weight:bold}
+.progress{height:10px;background:#e5ddcf;border-radius:10px;overflow:hidden;margin-bottom:25px}
+.bar{height:100%;background:var(--gold);width:0%;transition:.3s}
+.question{font-size:24px;line-height:1.3;margin:10px 0 22px}
+.options{display:grid;gap:12px}
+button{font:inherit;cursor:pointer}
+.option{border:2px solid #ded5c7;background:white;border-radius:14px;padding:15px;text-align:left;transition:.2s}
+.option:hover:not(:disabled){transform:translateY(-2px);border-color:var(--gold)}
+.option.correct{border-color:var(--ok);background:#eaf6ed}
+.option.wrong{border-color:var(--bad);background:#fdecec}
+.option:disabled{cursor:default}
+.feedback{margin-top:18px;padding:16px;border-radius:14px;display:none;line-height:1.5}
+.feedback.show{display:block}
+.feedback.ok{background:#eaf6ed;border-left:5px solid var(--ok)}
+.feedback.bad{background:#fdecec;border-left:5px solid var(--bad)}
+.next{margin-top:18px;background:var(--accent);color:white;border:0;border-radius:12px;padding:13px 22px;font-weight:bold;display:none}
+.next.show{display:inline-block}
+.result{text-align:center;display:none}
+.result h2{font-size:34px;color:var(--accent)}
+.bigscore{font-size:58px;font-weight:bold;color:var(--gold)}
+.restart{background:var(--gold);color:white;border:0;border-radius:12px;padding:14px 24px;font-weight:bold}
+.tip{margin-top:20px;background:#f1eadc;padding:14px;border-radius:14px;font-size:14px}
+footer{text-align:center;padding:18px;font-size:13px;color:#756b5e}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="badge">ENTOMOLOGIA FORENSE</div>
+  <h1>🪲 CSI dos Coleópteros</h1>
+  <div class="subtitle">Descubra como os besouros podem ajudar a investigar uma cena forense.</div>
+</header>
+
+<div class="card" id="quiz">
+  <div class="top"><span id="counter">Pergunta 1 de 12</span><span>⭐ <span id="score">0</span> pontos</span></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div class="question" id="question"></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next" id="next">Próxima pergunta →</button>
+  <div class="tip"><b>Curiosidade:</b> nem todo inseto encontrado em uma cena tem o mesmo valor forense. O estágio de decomposição, o ambiente e a identificação correta são fundamentais.</div>
+</div>
+
+<div class="card result" id="result">
+  <h2>Investigação concluída! 🔎</h2>
+  <div class="bigscore" id="finalScore">0/12</div>
+  <p id="message"></p>
+  <button class="restart" onclick="startGame()">Jogar novamente</button>
+</div>
+
+<footer>Jogo educativo • Coleópteros e Ciências Forenses</footer>
+</div>
+
+<script>
+const questions=[
+{q:"Qual ordem de insetos reúne os besouros?",a:["Diptera","Coleoptera","Lepidoptera","Hymenoptera"],c:1,e:"Coleoptera é a ordem que reúne os besouros. O nome vem do grego e faz referência às asas anteriores endurecidas, os élitros."},
+{q:"Por que os coleópteros podem ser úteis na entomologia forense?",a:["Porque todos vivem exclusivamente em cadáveres","Porque podem aparecer em diferentes fases da decomposição","Porque produzem DNA humano","Porque determinam a causa da morte sozinhos"],c:1,e:"Alguns coleópteros aparecem ou se tornam mais frequentes em determinadas fases da decomposição, fornecendo informações ecológicas e temporais."},
+{q:"O que são élitros?",a:["Antenas modificadas","Asas anteriores endurecidas","Pernas traseiras","Estruturas respiratórias"],c:1,e:"Os élitros são as asas anteriores endurecidas dos besouros. Eles protegem as asas posteriores e o abdômen."},
+{q:"Qual informação pode ser estimada com auxílio de insetos associados à decomposição?",a:["A cor dos olhos da vítima","O intervalo pós-morte, em determinadas condições","A personalidade da vítima","A profissão da vítima"],c:1,e:"A entomologia forense pode contribuir para estimar o intervalo pós-morte, mas a interpretação depende de espécie, temperatura, ambiente e outros fatores."},
+{q:"Qual família de coleópteros é frequentemente citada em estudos de entomologia forense?",a:["Silphidae","Felidae","Canidae","Muridae"],c:0,e:"Silphidae inclui espécies conhecidas por sua associação com matéria orgânica em decomposição e é importante em estudos forenses."},
+{q:"Staphylinidae são conhecidos principalmente por qual característica?",a:["Élitros geralmente muito curtos, deixando parte do abdômen exposta","Ausência de antenas","Corpo sempre azul","Viverem apenas na água"],c:0,e:"Muitos estafilinídeos apresentam élitros curtos, deixando segmentos do abdômen visíveis. A família é muito diversa."},
+{q:"Por que a temperatura é importante em investigações entomológicas?",a:["Porque influencia o desenvolvimento dos insetos","Porque muda a ordem taxonômica","Porque impede qualquer inseto de se alimentar","Porque determina a cor dos élitros"],c:0,e:"A temperatura influencia metabolismo, crescimento e desenvolvimento. Por isso, dados ambientais são essenciais para interpretar evidências entomológicas."},
+{q:"Qual é uma boa prática ao coletar coleópteros em uma investigação?",a:["Identificar a espécie apenas pela cor","Registrar local, condições ambientais e estágio de desenvolvimento","Descartar todos os insetos adultos","Misturar todas as amostras"],c:1,e:"Registros de localização, ambiente, temperatura e estágio de desenvolvimento ajudam a preservar o contexto da evidência."},
+{q:"Verdadeiro ou falso: todos os coleópteros encontrados perto de restos humanos são necessariamente necrófagos.",a:["Verdadeiro","Falso","Somente à noite","Somente no verão"],c:1,e:"Falso. Um coleóptero pode estar presente como predador, visitante acidental ou por outros motivos. A identificação e a ecologia da espécie são fundamentais."},
+{q:"Qual grupo pode predar outros artrópodes associados à decomposição?",a:["Alguns Staphylinidae","Todos os besouros","Apenas borboletas","Nenhum inseto"],c:0,e:"Alguns Staphylinidae são predadores e podem se alimentar de outros artrópodes presentes em ambientes de decomposição."},
+{q:"Por que a identificação taxonômica é importante?",a:["Porque espécies diferentes podem ter ecologias e ciclos de desenvolvimento diferentes","Porque todos os insetos têm o mesmo ciclo","Porque elimina a necessidade de dados ambientais","Porque substitui toda a investigação criminal"],c:0,e:"A identificação correta permite relacionar o exemplar à sua biologia, distribuição, habitat e desenvolvimento, evitando interpretações equivocadas."},
+{q:"Qual destas frases descreve melhor a entomologia forense?",a:["Uso de conhecimentos sobre artrópodes para auxiliar questões legais","Estudo exclusivo de fósseis","Identificação de plantas medicinais","Análise química de metais"],c:0,e:"A entomologia forense aplica conhecimentos sobre insetos e outros artrópodes a questões de interesse judicial, incluindo investigações relacionadas à decomposição."}
+];
+
+let current=0,score=0,answered=false;
+function shuffle(arr){return [...arr].sort(()=>Math.random()-.5)}
+function startGame(){current=0;score=0;answered=false;document.getElementById("quiz").style.display="block";document.getElementById("result").style.display="none";showQuestion()}
+function showQuestion(){
+ const q=questions[current]; answered=false;
+ document.getElementById("counter").textContent=`Pergunta ${current+1} de ${questions.length}`;
+ document.getElementById("score").textContent=score;
+ document.getElementById("bar").style.width=`${current/questions.length*100}%`;
+ document.getElementById("question").textContent=q.q;
+ const opts=document.getElementById("options"); opts.innerHTML="";
+ q.a.forEach((text,i)=>{let b=document.createElement("button");b.className="option";b.textContent=text;b.onclick=()=>answer(i,b);opts.appendChild(b)});
+ const f=document.getElementById("feedback");f.className="feedback";f.innerHTML="";
+ document.getElementById("next").className="next";
+}
+function answer(i,btn){
+ if(answered)return; answered=true;
+ const q=questions[current]; const buttons=document.querySelectorAll(".option");
+ buttons.forEach((b,j)=>{b.disabled=true;if(j===q.c)b.classList.add("correct")});
+ const f=document.getElementById("feedback");
+ if(i===q.c){score++;btn.classList.add("correct");f.className="feedback show ok";f.innerHTML="<b>Acertou! 🎯</b> "+q.e}
+ else{btn.classList.add("wrong");f.className="feedback show bad";f.innerHTML="<b>Quase! 🧐</b> A resposta correta é <b>"+q.a[q.c]+"</b>.<br>"+q.e}
+ document.getElementById("score").textContent=score;
+ document.getElementById("next").className="next show";
+ document.getElementById("next").textContent=current===questions.length-1?"Ver resultado →":"Próxima pergunta →";
+}
+document.getElementById("next").onclick=()=>{
+ current++;
+ if(current<questions.length)showQuestion(); else finish();
+}
+function finish(){
+ document.getElementById("quiz").style.display="none";
+ document.getElementById("result").style.display="block";
+ document.getElementById("finalScore").textContent=`${score}/${questions.length}`;
+ let msg=score>=10?"Você tem olhar de perito! 🕵️‍♀️":score>=7?"Boa investigação! Você já conhece bastante sobre os coleópteros. 🪲":"Boa tentativa! Revise as curiosidades e tente novamente. 🔬";
+ document.getElementById("message").textContent=msg;
+}
+startGame();
+</script>
+</body>
+</html>
